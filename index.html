@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>侘寂 オーナー専用 予約カレンダー</title>
+<!-- 検索エンジンにインデックスさせない -->
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Noto+Serif+JP:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:        #191815;
+    --bg-mid:    #1e1d1a;
+    --bg-card:   #222118;
+    --accent-gold:#c8a760;
+    --text-main: #f0ece2;
+    --text-sub:  #a09880;
+    --text-muted:#6a6050;
+    --border:    rgba(240, 236, 226, 0.08);
+    --border-gold: rgba(200, 167, 96, 0.35);
+    --font-jp:  'Noto Serif JP', 'YuMincho', '游明朝', 'Hiragino Mincho Pro', serif;
+    --font-en:  'Cormorant Garamond', 'Georgia', serif;
+  }
+  *{ box-sizing: border-box; margin:0; padding:0; }
+  html,body{ height:100%; }
+  body{
+    background: var(--bg);
+    color: var(--text-main);
+    font-family: var(--font-jp);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ===== パスワードゲート ===== */
+  /* 未認証時は本体を完全に隠す */
+  body.locked > :not(#passwordGate){ display:none !important; }
+  #passwordGate{ display:none; }
+  body.locked #passwordGate{ display:flex; }
+
+  #passwordGate{
+    position: fixed; inset:0; z-index:50;
+    background: radial-gradient(120% 120% at 50% 0%, #221f14 0%, var(--bg) 60%);
+    flex-direction: column; align-items:center; justify-content:center;
+    padding: 24px;
+  }
+  .gate-card{
+    background: var(--bg-card);
+    border: 1px solid var(--border-gold);
+    border-radius: 14px;
+    box-shadow: 0 24px 60px rgba(0,0,0,.5);
+    padding: 40px 32px;
+    width: 100%; max-width: 360px; text-align:center;
+  }
+  .gate-mark{
+    font-family: var(--font-en);
+    letter-spacing:.32em; font-size: 13px;
+    color: var(--accent-gold); text-transform: uppercase; margin-bottom:18px;
+  }
+  .gate-title{ font-size: 22px; font-weight:600; letter-spacing:.18em; margin-bottom: 8px; }
+  .gate-sub{ font-size: 12.5px; color: var(--text-sub); margin-bottom: 26px; letter-spacing:.06em; }
+  #passwordInput{
+    width:100%; background:#161510; border:1px solid var(--border);
+    border-radius: 8px; padding: 13px 14px; text-align:center;
+    color: var(--text-main); font-size: 18px; letter-spacing:.3em;
+    font-family: var(--font-en);
+  }
+  #passwordInput:focus{ outline:none; border-color: var(--accent-gold); }
+  #passwordInput::placeholder{ color: var(--text-muted); letter-spacing:.1em; font-family:var(--font-jp); font-size:14px;}
+  #passwordError{ color:#d98b6a; font-size: 12.5px; margin-top: 12px; display:none; }
+  #unlockBtn{
+    margin-top: 22px; width:100%; cursor:pointer;
+    background: var(--accent-gold); color:#1a1813;
+    border:none; border-radius: 8px; padding: 13px;
+    font-family: var(--font-jp); font-weight:600; font-size: 15px; letter-spacing:.12em;
+    transition: background .2s;
+  }
+  #unlockBtn:hover{ background:#d4b46e; }
+
+  /* ===== 本体 ===== */
+  header{
+    background: rgba(25,24,21,.92);
+    border-bottom:1px solid var(--border);
+    padding: 16px 22px; text-align:center;
+  }
+  header .mark{ font-family:var(--font-en); letter-spacing:.34em; font-size:11px; color:var(--accent-gold); text-transform:uppercase; }
+  header h1{ font-size: 18px; font-weight:600; letter-spacing:.14em; margin-top:4px; }
+  main{ flex:1; padding: 18px 16px 12px; max-width: 1160px; width:100%; margin:0 auto; }
+
+  .calendar-wrapper{
+    position: relative; width:100%;
+    height: 76vh; min-height: 480px;
+    background:#fff; border:1px solid var(--border-gold); border-radius:10px; overflow:hidden;
+  }
+  @media (min-width:768px){ .calendar-wrapper{ height: 720px; } }
+  .calendar-wrapper iframe{ position:absolute; inset:0; width:100%; height:100%; border:0; }
+
+  .note{ text-align:center; color: var(--text-sub); font-size: 12.5px; margin: 14px 0 6px; line-height:1.7; }
+  .note a{ color: var(--accent-gold); text-decoration:underline; font-weight:600; }
+  footer{ text-align:center; color: var(--text-muted); font-size: 11px; padding: 14px; letter-spacing:.08em; }
+  footer .lock{ color: var(--text-sub); cursor:pointer; text-decoration:underline; margin-left:8px; }
+</style>
+</head>
+<body class="locked">
+
+  <!-- パスワードゲート -->
+  <div id="passwordGate">
+    <div class="gate-card">
+      <div class="gate-mark">Wabi&nbsp;Sabi&nbsp;Himeji</div>
+      <div class="gate-title">侘寂 予約カレンダー</div>
+      <div class="gate-sub">オーナー専用ページ｜閲覧にはパスワードが必要です</div>
+      <input type="password" id="passwordInput" placeholder="パスワード" autocomplete="off" inputmode="numeric">
+      <p id="passwordError">パスワードが違います</p>
+      <button id="unlockBtn" type="button">ひらく</button>
+    </div>
+  </div>
+
+  <!-- 本体 -->
+  <header>
+    <div class="mark">Wabi Sabi Himeji</div>
+    <h1>侘寂 予約カレンダー</h1>
+  </header>
+
+  <main>
+    <div class="calendar-wrapper">
+      <iframe
+        src="https://calendar.google.com/calendar/embed?src=c_24ee7983d3a0ec08b35795890867688870aa1ca45b18aae672f0dcb72b1400ce%40group.calendar.google.com&ctz=Asia%2FTokyo&mode=MONTH&showTitle=0&showPrint=0&showCalendars=0&showTz=0"
+        frameborder="0" scrolling="no" loading="lazy"></iframe>
+    </div>
+    <p class="note">
+      ※カレンダーが表示されない場合は、<a href="https://calendar.google.com/calendar/embed?src=c_24ee7983d3a0ec08b35795890867688870aa1ca45b18aae672f0dcb72b1400ce%40group.calendar.google.com&ctz=Asia%2FTokyo" target="_blank" rel="noopener noreferrer">こちらをタップ</a>して別画面で開いてください。
+    </p>
+  </main>
+
+  <footer>
+    侘寂 — 姫路城下町古民家旅館<span class="lock" id="lockBtn">ロックする</span>
+  </footer>
+
+  <script>
+    (function(){
+      var PASS = '5757';
+      var KEY  = 'wabisabi_owner_cal_unlocked';
+
+      function unlock(){ document.body.classList.remove('locked'); }
+      function tryUnlock(){
+        var input = document.getElementById('passwordInput');
+        var err   = document.getElementById('passwordError');
+        if (input.value === PASS){
+          try { sessionStorage.setItem(KEY, '1'); } catch(e){}
+          err.style.display = 'none';
+          unlock();
+        } else {
+          err.style.display = 'block';
+          input.value = '';
+          input.focus();
+        }
+      }
+
+      window.addEventListener('DOMContentLoaded', function(){
+        var alreadyOpen = false;
+        try { alreadyOpen = sessionStorage.getItem(KEY) === '1'; } catch(e){}
+        if (alreadyOpen){ unlock(); }
+
+        var input = document.getElementById('passwordInput');
+        document.getElementById('unlockBtn').addEventListener('click', tryUnlock);
+        input.addEventListener('keydown', function(e){ if (e.key === 'Enter'){ e.preventDefault(); tryUnlock(); } });
+        if (!alreadyOpen){ input.focus(); }
+
+        document.getElementById('lockBtn').addEventListener('click', function(){
+          try { sessionStorage.removeItem(KEY); } catch(e){}
+          location.reload();
+        });
+      });
+    })();
+  </script>
+</body>
+</html>
